@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    environment { 
+        REPO_URL = "https://github.com/UglyAnimal/url-image-fetcher.git"
+        BRANCH_NAME = "main"
+    }
+    parameters {
+        string(name: "URL", defaultValue: "https://varjo.com", description: "Provide a website URL")
+    }
+    stages {
+        stage("Clone Repository") {
+            steps {
+                git branch: "$BRANCH_NAME", url: "$REPO_URL"
+            }
+        }
+        stage("Install virtual environment") {
+            steps {
+                sh "python3 -m pip install --user virtualenv"
+            }
+        }
+        stage("Create virtual environment") {
+            steps {
+                sh "python3 -m venv venv"
+            }
+        }
+        stage("Activate virtual environment") {
+            steps {
+                sh "source venv/bin/activate"
+            }
+        }
+        stage("Install dependencies") {
+            steps {
+                sh "pip3 install -r requirements.txt --user"
+            }
+        }    
+        stage("Run python script") {
+            steps {
+                sh "python3 url_image_fetcher_v2.py -w \$URL"
+            }
+        }
+        stage("Archive artifacts") {
+            steps {
+                archiveArtifacts artifacts: "**/*.png, **/*.apng, **/*.jpg, **/*.jpeg, **/*.jfif, **/*.pjpeg, **/*.pjp, **/*.svg, **/*.webp, **/*.avif, **/*.gif, **/*.bmp, **/*.ico, **/*.cur, **/*.tif, **/*.tiff", fingerprint: true
+            }
+        }
+    }
+}

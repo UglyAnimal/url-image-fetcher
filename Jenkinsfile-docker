@@ -1,0 +1,37 @@
+pipeline {
+    agent {
+        docker {
+            image "python:3.9.16-slim"
+            args "-u root"
+        }
+    }
+    environment { 
+        REPO_URL = "https://github.com/UglyAnimal/url-image-fetcher.git"
+        BRANCH_NAME = "main"
+    }
+    parameters {
+        string(name: "URL", defaultValue: "https://varjo.com", description: "Provide a website URL")
+    }
+    stages {
+        stage("Clone Repository") {
+            steps {
+                git branch: "$BRANCH_NAME", url: "$REPO_URL"
+            }
+        }
+        stage("Install dependencies") {
+            steps {
+                sh "pip install -r requirements.txt"
+            }
+        }
+        stage("Run python script") {
+            steps {
+                sh "python url_image_fetcher_v2.py -w \$URL"
+            }
+        }
+        stage("Archive artifacts") {
+            steps {
+                archiveArtifacts artifacts: "**/*.png, **/*.apng, **/*.jpg, **/*.jpeg, **/*.jfif, **/*.pjpeg, **/*.pjp, **/*.svg, **/*.webp, **/*.avif, **/*.gif, **/*.bmp, **/*.ico, **/*.cur, **/*.tif, **/*.tiff", fingerprint: true
+            }
+        }
+    }
+}
